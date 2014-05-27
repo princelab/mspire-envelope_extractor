@@ -1,0 +1,5 @@
+#!/usr/bin/env ruby
+
+require 'mspire/envelope_extractor/commandline'
+
+Mspire::EnvelopeExtractor::Commandline.run(ARGV)
