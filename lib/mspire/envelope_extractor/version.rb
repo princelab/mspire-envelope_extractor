@@ -1,5 +1,5 @@
 module Mspire
-  module EnvelopeExtractor
+  class EnvelopeExtractor
     VERSION = "0.0.1"
   end
 end

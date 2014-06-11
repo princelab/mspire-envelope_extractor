@@ -27,7 +27,7 @@ Gem::Specification.new do |spec|
   end
 
   [
-    ["bundler", "~> 1.5.1"],
+    ["bundler", "~> 1.6.2"],
     ["rake"],
     ["rspec", "~> 2.14.1"], 
     ["rdoc", "~> 4.1.0"], 

@@ -1,5 +1,6 @@
 require 'optparse'
 require 'ostruct'
+require 'mspire/envelope_extractor'
 
 module Mspire
   class EnvelopeExtractor

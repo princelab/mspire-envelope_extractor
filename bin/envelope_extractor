@@ -2,4 +2,4 @@
 
 require 'mspire/envelope_extractor/commandline'
 
-Mspire::EnvelopeExtractor::Commandline.run(ARGV)
+Mspire::EnvelopeExtractor::Commandline.run(File.basename(__FILE__), ARGV)
