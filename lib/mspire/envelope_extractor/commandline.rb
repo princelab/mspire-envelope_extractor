@@ -9,8 +9,8 @@ module Mspire
 
         opt = OpenStruct.new({})
         parser = OptionParser.new do |op|
-          op.banner = "usage: #{progname} <mzmlfile>.mzML <mzidentmlfile>.mzid"
-          op.separator "output: <mzidentmlfile>.csv"
+          op.banner = "usage: #{progname} <mzmlfile>.mzML <search_hits_file> [<mzmlfile_enriched>.mzML ...]"
+          op.separator "[still working on output]"
         end
 
         if argv.size < 2
