@@ -19,17 +19,51 @@ module Mspire
       end
     end
 
-    IsotopeDistDetail = Struct.new(start_mz, mz_delta, charge) do
+    IsotopePeak = Struct.new(:given_mz, :mzs, :ints) do
+      def initialize(*args)
+        super(*args)
+        self.mzs = [] unless self.mzs
+        self.ints = [] unless self.ints
+      end
 
-      def initialize(spectrum, start_mz, charge, mz_delta=0.01, num=5, mass_of_neutron=Mspire::Mass::Subatomic::MONO[:neutron])
+      def area
+        _area = mzs.zip(ints).each_cons(2).map {|(mz0,int0), (mz1, int1)|
+          sorted_y = [int0, int1].sort
+          b = mz1 - mz0
+          (b * sorted_y.first) + (((sorted_y.last - sorted_y.first) * b) / 2.0)
+        }.reduce(:+)
+        _area || 0
+      end
+    end
+
+    IsotopeDistDetail = Struct.new(:start_mz, :mz_delta, :charge, :isotope_peaks) do
+
+      def initialize(spectrum, start_mz, charge, mz_delta=0.08, num=5, mass_of_neutron=Mspire::Mass::Subatomic::MONO[:neutron])
+        self.start_mz = start_mz
+        self.charge = charge
+        self.mz_delta = mz_delta
         ints = spectrum.intensities
-        (0..(num-1)).map do |n|
+        mzs = spectrum.mzs
+        self.isotope_peaks = (0..(num-1)).map do |n|
           mz = start_mz + (n*mass_of_neutron / charge)
           indices = spectrum.select_indices(mz-mz_delta..mz+mz_delta)
-          indices.map {|i| ints[i] }.reduce(:+)
+          ip = IsotopePeak.new(mz)
+          indices.each {|i| ip.ints << ints[i] ; ip.mzs << mzs[i] }
+          ip
         end
       end
-      
+
+      def num
+        isotope_peaks.size
+      end
+
+      # returns parallel array of mzs and intensities (areas) for the isotopic
+      # peaks
+      def peaks_spectrum
+        mzs = [] ; ints = []
+        isotope_peaks.each {|ip| mzs << ip.given_mz ; ints << ip.area }
+        [mzs, ints]
+      end
     end
 
     SearchHit = Struct.new(:spec_id_result, :mz_theor, :charge, :mz_exp, :peptide, :score)
@@ -92,12 +126,24 @@ module Mspire
             #p index
             abort 'still need to figure out mapping: not obvious at all!'
           when ABSciexSearchHit
+            puts "**********************************"
+            puts "AASEQ: #{search_hit.peptide.aaseq}"
+            puts "CHARGE: #{search_hit.charge}"
+            puts "MODS: #{search_hit.peptide.mods}"
+            puts "MZ THEOR: #{search_hit.mz_theor}"
+            puts "MZ EXP: #{search_hit.mz_exp}"
             prec_spectrum = mzml[search_hit.precursor_spectrum_id]
-            p prec_spectrum.id
-            p prec_spectrum.ms_level
-            dist = get_isotope_dist(prec_spectrum, search_hit.mz_exp, search_hit.charge)
-            p dist
-            abort 'here'
+            puts "PREC SPEC ID: #{prec_spectrum.id}"
+            puts "PREC MS LEVEL: #{prec_spectrum.ms_level}"
+            dist_detail = IsotopeDistDetail.new(prec_spectrum, search_hit.mz_exp, search_hit.charge)
+            (mzs, ints) = dist_detail.peaks_spectrum
+            puts "TRAP AREA:"
+            puts mzs.join(",")
+            puts ints.join(",")
+            puts "ISOTOPE_PEAKS (mz,mz...:int,int...)"
+            dist_detail.isotope_peaks.each do |ip|
+              puts ip.mzs.join(',') + ':' + ip.ints.join(',')
+            end
           end
         end
       end

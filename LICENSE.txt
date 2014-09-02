@@ -1,4 +1,5 @@
-Copyright (c) 2014 John Prince
+Copyright (c) 2014 Brigham Young University
+authored by: John Prince
 
 MIT License
 
